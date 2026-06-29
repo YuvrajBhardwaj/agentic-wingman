@@ -49,6 +49,7 @@ export const App = (): JSX.Element => {
   const [memoryVersion, setMemoryVersion] = useState(0);
   const [showMemory, setShowMemory] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [connectionsOpen, setConnectionsOpen] = useState(false);
 
   useEffect(() => {
     if (run.state.status === 'done') setMemoryVersion((v) => v + 1);
@@ -67,6 +68,7 @@ export const App = (): JSX.Element => {
       label: showMemory ? 'Hide memory panel' : 'Show memory panel',
       run: () => setShowMemory((v) => !v),
     },
+    { id: 'connections', label: 'Connect accounts (Google, messaging)', run: () => setConnectionsOpen(true) },
     { id: 'refresh-memory', label: 'Refresh memory panel', run: () => setMemoryVersion((v) => v + 1) },
   ];
 
@@ -84,6 +86,9 @@ export const App = (): JSX.Element => {
   return (
     <div className="flex h-full flex-col bg-surface">
       <CommandPalette open={paletteOpen} commands={commands} onClose={() => setPaletteOpen(false)} />
+      {connectionsOpen ? (
+        <ConnectionsPanel client={client} onClose={() => setConnectionsOpen(false)} />
+      ) : null}
 
       <header className="z-10 flex items-center gap-3 border-b border-border bg-panel/70 px-4 py-2.5 backdrop-blur">
         <div className="flex items-center gap-2">
@@ -102,6 +107,9 @@ export const App = (): JSX.Element => {
               {run.state.usage.totalTokens.toLocaleString()} tokens
             </span>
           ) : null}
+          <IconButton label="Connect accounts" onClick={() => setConnectionsOpen(true)}>
+            Connect
+          </IconButton>
           <IconButton label="Command palette" onClick={() => setPaletteOpen(true)}>
             ⌘K
           </IconButton>
