@@ -171,8 +171,28 @@ const applyEvent = (state: RunState, event: AppEvent): RunState => {
     case 'usage':
       return { ...state, usage: event.usage };
 
-    case 'done':
+    case 'done': {
+      // Surface non-successful endings (error / max steps / aborted) so the user
+      // isn't left staring at an empty transcript.
+      if (event.reason !== 'completed') {
+        const [id, seq] = nextId(state);
+        const message =
+          event.message ??
+          (event.reason === 'max_steps'
+            ? 'Stopped after reaching the step limit.'
+            : event.reason === 'aborted'
+              ? 'Run was interrupted.'
+              : 'The run ended with an error.');
+        return {
+          ...state,
+          seq,
+          status: 'done',
+          openAssistantId: undefined,
+          items: [...state.items, { id, kind: 'error', message }],
+        };
+      }
       return { ...state, status: 'done', openAssistantId: undefined };
+    }
 
     case 'error': {
       const [id, seq] = nextId(state);
