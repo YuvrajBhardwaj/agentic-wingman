@@ -1,7 +1,7 @@
 import { InMemoryAccountStore, vaultFromHexKey, type SecretVault } from '@forgewright/accounts';
 import { generateKeyHex } from '@forgewright/accounts';
 import { createContextBuilder, createIndexer } from '@forgewright/context';
-import { CalendarClient, GmailClient, GoogleAuthFlow, GoogleOAuth } from '@forgewright/google';
+import { CalendarClient, GmailClient, GoogleOAuth } from '@forgewright/google';
 import {
   IntegrationManager,
   SlackIntegration,
@@ -11,6 +11,7 @@ import {
 } from '@forgewright/integrations';
 import { JobScheduler, WorkflowEngine } from '@forgewright/jobs';
 import { McpHost } from '@forgewright/mcp';
+import { createProvider, KNOWN_PROVIDERS, type OAuthProvider } from '@forgewright/oauth';
 import { TOKENS, type Container } from '@forgewright/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
 
@@ -41,17 +42,36 @@ const buildAuthDeps = (logger: AuthRouteDeps['logger']): AuthRouteDeps => {
     });
   }
 
-  const deps: AuthRouteDeps = { accountStore: new InMemoryAccountStore(), vault, logger };
-  const { FORGE_GOOGLE_CLIENT_ID: clientId, FORGE_GOOGLE_CLIENT_SECRET: clientSecret } = env;
-  if (clientId && clientSecret) {
-    const publicUrl = env.FORGE_PUBLIC_URL ?? `http://localhost:${env.FORGE_PORT ?? '4317'}`;
-    const flow = new GoogleAuthFlow({
-      clientId,
-      clientSecret,
-      redirectUri: `${publicUrl}/auth/google/callback`,
-    });
+  const publicUrl = env.FORGE_PUBLIC_URL ?? `http://localhost:${env.FORGE_PORT ?? '4317'}`;
+
+  // Register every provider whose OAuth client id + secret are configured.
+  const providers = new Map<string, OAuthProvider>();
+  for (const id of KNOWN_PROVIDERS) {
+    const clientId = env[`FORGE_${id.toUpperCase()}_CLIENT_ID`];
+    const clientSecret = env[`FORGE_${id.toUpperCase()}_CLIENT_SECRET`];
+    if (clientId && clientSecret) {
+      const provider = createProvider(id, {
+        clientId,
+        clientSecret,
+        redirectUri: `${publicUrl}/auth/${id}/callback`,
+      });
+      if (provider) providers.set(id, provider);
+    }
+  }
+
+  const deps: AuthRouteDeps = {
+    accountStore: new InMemoryAccountStore(),
+    vault,
+    logger,
+    providers,
+    ...(env.FORGE_WEB_URL ? { webRedirectUrl: env.FORGE_WEB_URL } : {}),
+  };
+
+  // Google-specific: a per-user agenda built from the connected account.
+  const { FORGE_GOOGLE_CLIENT_ID: gid, FORGE_GOOGLE_CLIENT_SECRET: gsecret } = env;
+  if (gid && gsecret) {
     const buildUserGoogle: AuthRouteDeps['buildUserGoogle'] = (refreshToken) => {
-      const oauth = new GoogleOAuth({ clientId, clientSecret, refreshToken });
+      const oauth = new GoogleOAuth({ clientId: gid, clientSecret: gsecret, refreshToken });
       const gmail = new GmailClient(oauth);
       const calendar = new CalendarClient(oauth);
       const now = new Date();
@@ -62,12 +82,7 @@ const buildAuthDeps = (logger: AuthRouteDeps['logger']): AuthRouteDeps => {
         unreadCount: async () => (await gmail.listMessages('is:unread', 50)).length,
       };
     };
-    return {
-      ...deps,
-      googleAuthFlow: flow,
-      buildUserGoogle,
-      ...(env.FORGE_WEB_URL ? { webRedirectUrl: env.FORGE_WEB_URL } : {}),
-    };
+    return { ...deps, buildUserGoogle };
   }
   return deps;
 };

@@ -92,6 +92,9 @@ importers:
       '@forgewright/memory':
         specifier: workspace:*
         version: link:../../packages/memory
+      '@forgewright/oauth':
+        specifier: workspace:*
+        version: link:../../packages/oauth
       '@forgewright/orchestrator':
         specifier: workspace:*
         version: link:../../packages/orchestrator
@@ -321,6 +324,15 @@ importers:
       '@forgewright/embeddings':
         specifier: workspace:*
         version: link:../embeddings
+      '@forgewright/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@forgewright/types':
+        specifier: workspace:*
+        version: link:../types
+
+  packages/oauth:
+    dependencies:
       '@forgewright/shared':
         specifier: workspace:*
         version: link:../shared

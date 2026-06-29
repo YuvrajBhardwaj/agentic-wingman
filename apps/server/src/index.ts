@@ -1,15 +1,33 @@
+import { existsSync } from 'node:fs';
+import { dirname, join, parse } from 'node:path';
+
 import { TOKENS } from '@forgewright/shared';
 
 import { buildApp } from './app.js';
 import { buildContainer } from './container.js';
 
-/** Load a local `.env` into process.env if present (Node >= 20.12). */
+/**
+ * Load the nearest `.env` into process.env if present (Node >= 20.12).
+ * Walks up from the current directory so it works whether the server is
+ * started from the repo root or from `apps/server`.
+ */
 const loadDotEnv = (): void => {
   const loader = (process as { loadEnvFile?: (path?: string) => void }).loadEnvFile;
-  try {
-    loader?.();
-  } catch {
-    // No .env file — rely on the real environment.
+  if (!loader) return;
+  let dir = process.cwd();
+  const { root } = parse(dir);
+  for (;;) {
+    const candidate = join(dir, '.env');
+    if (existsSync(candidate)) {
+      try {
+        loader(candidate);
+      } catch {
+        // Malformed .env — rely on the real environment.
+      }
+      return;
+    }
+    if (dir === root) return; // No .env found anywhere up the tree.
+    dir = dirname(dir);
   }
 };
 

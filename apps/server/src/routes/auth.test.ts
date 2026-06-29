@@ -1,4 +1,5 @@
 import { InMemoryAccountStore, vaultFromHexKey, generateKeyHex } from '@forgewright/accounts';
+import type { OAuthProvider } from '@forgewright/oauth';
 import { MemorySink, StructuredLogger } from '@forgewright/shared';
 import { loadConfig } from '@forgewright/shared';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -6,11 +7,14 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { buildApp } from '../app.js';
 import { buildContainer } from '../container.js';
 
-import type { AuthRouteDeps, GoogleAuthFlowLike, UserGoogle } from './auth.js';
+import type { AuthRouteDeps, UserGoogle } from './auth.js';
 
 const logger = new StructuredLogger({ sink: new MemorySink() });
 
-const fakeFlow: GoogleAuthFlowLike = {
+const fakeProvider: OAuthProvider = {
+  id: 'google',
+  label: 'Google',
+  scopes: ['email'],
   buildAuthUrl: (state) => `https://accounts.google.com/o/oauth2/v2/auth?state=${state}`,
   exchangeCode: async () => ({
     accessToken: 'AT',
@@ -18,7 +22,6 @@ const fakeFlow: GoogleAuthFlowLike = {
     scope: 'email calendar',
   }),
   getUserInfo: async () => ({ email: 'alice@example.com', name: 'Alice' }),
-  scopeList: ['email'],
 };
 
 const fakeUserGoogle = (refreshToken: string): UserGoogle => ({
@@ -43,7 +46,7 @@ const makeApp = (overrides: Partial<AuthRouteDeps> = {}) => {
     accountStore: new InMemoryAccountStore(),
     vault: vaultFromHexKey(generateKeyHex()),
     logger,
-    googleAuthFlow: fakeFlow,
+    providers: new Map([[fakeProvider.id, fakeProvider]]),
     buildUserGoogle: fakeUserGoogle,
     ...overrides,
   };
@@ -74,7 +77,13 @@ afterEach(async () => {
   app = undefined;
 });
 
-describe('multi-tenant Google auth', () => {
+describe('multi-provider auth', () => {
+  it('lists the configured providers', async () => {
+    const res = await makeApp().inject({ method: 'GET', url: '/auth/providers' });
+    expect(res.statusCode).toBe(200);
+    expect(res.json().providers).toEqual([{ id: 'google', label: 'Google' }]);
+  });
+
   it('connects a user via the OAuth flow and issues a session', async () => {
     const application = makeApp();
     const { token, user } = await connect(application);
@@ -117,8 +126,8 @@ describe('multi-tenant Google auth', () => {
     expect(res.statusCode).toBe(400);
   });
 
-  it('returns 501 when Google is not configured', async () => {
-    const res = await makeApp({ googleAuthFlow: undefined as never }).inject({
+  it('returns 501 when the provider is not configured', async () => {
+    const res = await makeApp({ providers: new Map() }).inject({
       method: 'GET',
       url: '/auth/google/start',
     });

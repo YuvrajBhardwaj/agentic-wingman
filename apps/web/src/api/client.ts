@@ -4,9 +4,15 @@ import { authHeader } from './auth.ts';
 import type { AppEvent } from './events.ts';
 import { parseEventStream } from './sse.ts';
 
+/** An OAuth connector the server has configured (client id + secret present). */
+export interface AuthProvider {
+  readonly id: string;
+  readonly label: string;
+}
+
 export interface CurrentUser {
   readonly user: { id: string; email: string; name?: string } | null;
-  readonly connections: { google: boolean };
+  readonly connections: Readonly<Record<string, boolean>>;
 }
 
 export interface IntegrationInfo {
@@ -39,7 +45,7 @@ export interface ForgewrightClient {
   searchMemories(query: string, limit?: number): Promise<readonly Memory[]>;
   addMemory(memory: NewMemory): Promise<Memory>;
   forgetMemory(id: string): Promise<void>;
-  authProviders(): Promise<{ google: boolean }>;
+  authProviders(): Promise<readonly AuthProvider[]>;
   me(): Promise<CurrentUser>;
   listIntegrations(): Promise<readonly IntegrationInfo[]>;
   logout(): Promise<void>;
@@ -110,15 +116,16 @@ export const createClient = (fetchImpl: typeof fetch = fetch): ForgewrightClient
 
     async authProviders() {
       try {
-        return await json<{ google: boolean }>(await fetchImpl('/auth/providers'));
+        const data = await json<{ providers: AuthProvider[] }>(await fetchImpl('/auth/providers'));
+        return data.providers;
       } catch {
-        return { google: false };
+        return [];
       }
     },
 
     async me() {
       const response = await fetchImpl('/me', { headers: authHeader() });
-      if (response.status === 401) return { user: null, connections: { google: false } };
+      if (response.status === 401) return { user: null, connections: {} };
       return json<CurrentUser>(response);
     },
 

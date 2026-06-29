@@ -26,6 +26,7 @@
     "@forgewright/llm": "workspace:*",
     "@forgewright/mcp": "workspace:*",
     "@forgewright/memory": "workspace:*",
+    "@forgewright/oauth": "workspace:*",
     "@forgewright/orchestrator": "workspace:*",
     "@forgewright/planner": "workspace:*",
     "@forgewright/shared": "workspace:*",

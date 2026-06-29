@@ -23,8 +23,8 @@ const fakeClient = (events: readonly AppEvent[]): ForgewrightClient => ({
     updatedAt: 0,
   })),
   forgetMemory: vi.fn(async () => {}),
-  authProviders: vi.fn(async () => ({ google: false })),
-  me: vi.fn(async () => ({ user: null, connections: { google: false } })),
+  authProviders: vi.fn(async () => []),
+  me: vi.fn(async () => ({ user: null, connections: {} })),
   listIntegrations: vi.fn(async () => []),
   logout: vi.fn(async () => {}),
 });

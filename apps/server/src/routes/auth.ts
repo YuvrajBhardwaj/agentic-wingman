@@ -2,20 +2,11 @@ import { randomBytes } from 'node:crypto';
 
 import type { AccountStore, SecretVault, User } from '@forgewright/accounts';
 import { buildDailyAgenda, type CalendarEvent } from '@forgewright/google';
+import type { OAuthProvider } from '@forgewright/oauth';
 import type { Logger } from '@forgewright/types';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
-/** Minimal surface of the Google consent flow the routes depend on. */
-export interface GoogleAuthFlowLike {
-  buildAuthUrl(state: string): string;
-  exchangeCode(
-    code: string,
-  ): Promise<{ accessToken: string; refreshToken?: string; scope?: string }>;
-  getUserInfo(accessToken: string): Promise<{ email: string; name?: string }>;
-  readonly scopeList: readonly string[];
-}
-
-/** Per-user Google accessor built from that user's refresh token. */
+/** Per-user Google accessor built from that user's refresh token (for the agenda). */
 export interface UserGoogle {
   listTodayEvents(): Promise<readonly CalendarEvent[]>;
   unreadCount(): Promise<number>;
@@ -25,7 +16,8 @@ export interface AuthRouteDeps {
   readonly accountStore: AccountStore;
   readonly vault: SecretVault;
   readonly logger: Logger;
-  readonly googleAuthFlow?: GoogleAuthFlowLike;
+  /** Configured OAuth providers, keyed by id (google, slack, github, …). */
+  readonly providers: ReadonlyMap<string, OAuthProvider>;
   readonly buildUserGoogle?: (refreshToken: string) => UserGoogle;
   readonly sessionTtlMs?: number;
   /** If set, the callback redirects here with `#session=<token>` instead of JSON. */
@@ -33,11 +25,10 @@ export interface AuthRouteDeps {
 }
 
 const SESSION_TTL = 1000 * 60 * 60 * 24 * 30; // 30 days
+const STATE_TTL = 1000 * 60 * 10;
 
 export const registerAuthRoutes = (app: FastifyInstance, deps: AuthRouteDeps): void => {
-  // CSRF state for in-flight consent redirects (short-lived).
-  const pendingStates = new Map<string, number>();
-  const STATE_TTL = 1000 * 60 * 10;
+  const pendingStates = new Map<string, { provider: string; expiry: number }>();
 
   const requireUser = async (
     request: FastifyRequest,
@@ -54,65 +45,64 @@ export const registerAuthRoutes = (app: FastifyInstance, deps: AuthRouteDeps): v
     return user;
   };
 
-  // Which OAuth providers are configured (so the UI shows the right buttons).
+  // Which providers are configured (so the UI shows the right Connect buttons).
   app.get('/auth/providers', async (_request, reply) =>
-    reply.send({ google: deps.googleAuthFlow !== undefined }),
+    reply.send({
+      providers: [...deps.providers.values()].map((p) => ({ id: p.id, label: p.label })),
+    }),
   );
 
-  // Begin "Connect with Google".
-  app.get('/auth/google/start', async (_request, reply) => {
-    if (!deps.googleAuthFlow) {
+  // Begin connecting a provider.
+  app.get<{ Params: { provider: string } }>('/auth/:provider/start', async (request, reply) => {
+    const provider = deps.providers.get(request.params.provider);
+    if (!provider) {
       return reply
         .status(501)
-        .send({ error: { message: 'Google is not configured on this server' } });
+        .send({ error: { message: `"${request.params.provider}" is not configured` } });
     }
     const state = randomBytes(16).toString('hex');
-    pendingStates.set(state, Date.now() + STATE_TTL);
-    return reply.redirect(deps.googleAuthFlow.buildAuthUrl(state));
+    pendingStates.set(state, { provider: provider.id, expiry: Date.now() + STATE_TTL });
+    return reply.redirect(provider.buildAuthUrl(state));
   });
 
-  // OAuth callback: exchange code, store the user's encrypted refresh token, issue a session.
-  app.get<{ Querystring: { code?: string; state?: string } }>(
-    '/auth/google/callback',
+  // OAuth callback: exchange code, store the user's encrypted token, issue a session.
+  app.get<{ Params: { provider: string }; Querystring: { code?: string; state?: string } }>(
+    '/auth/:provider/callback',
     async (request, reply) => {
-      const flow = deps.googleAuthFlow;
-      if (!flow) return reply.status(501).send({ error: { message: 'Google is not configured' } });
+      const provider = deps.providers.get(request.params.provider);
+      if (!provider)
+        return reply.status(501).send({ error: { message: 'provider not configured' } });
+
       const { code, state } = request.query;
-      if (
-        !code ||
-        !state ||
-        !pendingStates.has(state) ||
-        (pendingStates.get(state) ?? 0) < Date.now()
-      ) {
+      const pending = state ? pendingStates.get(state) : undefined;
+      if (!code || !pending || pending.provider !== provider.id || pending.expiry < Date.now()) {
         return reply.status(400).send({ error: { message: 'invalid or expired state' } });
       }
-      pendingStates.delete(state);
+      pendingStates.delete(state as string);
 
-      const tokens = await flow.exchangeCode(code);
-      if (!tokens.refreshToken) {
-        return reply.status(400).send({
-          error: { message: 'no refresh token returned; re-consent with offline access' },
-        });
-      }
-      const profile = await flow.getUserInfo(tokens.accessToken);
-      const user = await deps.accountStore.upsertUserByEmail(profile.email, profile.name);
+      const tokens = await provider.exchangeCode(code);
+      const info = await provider.getUserInfo(tokens.accessToken);
+      const email =
+        info.email ??
+        `${provider.id}:${info.externalId ?? randomBytes(6).toString('hex')}@forgewright.local`;
+      const user = await deps.accountStore.upsertUserByEmail(email, info.name);
       await deps.accountStore.saveCredential({
         userId: user.id,
-        provider: 'google',
-        encryptedRefreshToken: deps.vault.encrypt(tokens.refreshToken),
-        scopes: tokens.scope ? tokens.scope.split(' ') : [...flow.scopeList],
+        provider: provider.id,
+        encryptedRefreshToken: deps.vault.encrypt(tokens.refreshToken ?? tokens.accessToken),
+        scopes: tokens.scope ? tokens.scope.split(' ') : [...provider.scopes],
         updatedAt: Date.now(),
       });
       const session = await deps.accountStore.createSession(
         user.id,
         deps.sessionTtlMs ?? SESSION_TTL,
       );
-      deps.logger.info('user_connected_google', { userId: user.id });
+      deps.logger.info('user_connected_provider', { userId: user.id, provider: provider.id });
 
       if (deps.webRedirectUrl) {
         return reply.redirect(`${deps.webRedirectUrl}#session=${session.token}`);
       }
-      return reply.send({ token: session.token, user });
+      return reply.send({ token: session.token, user, provider: provider.id });
     },
   );
 
@@ -126,8 +116,11 @@ export const registerAuthRoutes = (app: FastifyInstance, deps: AuthRouteDeps): v
   app.get('/me', async (request, reply) => {
     const user = await requireUser(request, reply);
     if (!user) return reply;
-    const google = await deps.accountStore.getCredential(user.id, 'google');
-    return reply.send({ user, connections: { google: google !== undefined } });
+    const connections: Record<string, boolean> = {};
+    for (const id of deps.providers.keys()) {
+      connections[id] = (await deps.accountStore.getCredential(user.id, id)) !== undefined;
+    }
+    return reply.send({ user, connections });
   });
 
   // Per-user daily agenda from the user's own Google data.

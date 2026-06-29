@@ -1,13 +1,27 @@
 import { useEffect, useState } from 'react';
 
-import type { CurrentUser, ForgewrightClient, IntegrationInfo } from '../api/client.ts';
+import type {
+  AuthProvider,
+  CurrentUser,
+  ForgewrightClient,
+  IntegrationInfo,
+} from '../api/client.ts';
 
 interface State {
   loading: boolean;
-  providers: { google: boolean };
+  providers: readonly AuthProvider[];
   me: CurrentUser;
   integrations: readonly IntegrationInfo[];
 }
+
+/** Icon + one-line pitch per known OAuth connector. */
+const CONNECTOR_META: Record<string, { icon: string; detail: string }> = {
+  google: { icon: '🗓️', detail: 'Let your assistant read mail and manage your calendar' },
+  github: { icon: '🐙', detail: 'Read your repos, issues, and profile' },
+  slack: { icon: '💬', detail: 'Sign in with Slack to message your workspace' },
+  discord: { icon: '🎮', detail: 'Connect your Discord identity' },
+  microsoft: { icon: '🪟', detail: 'Connect Outlook mail and Microsoft 365' },
+};
 
 const Row = ({
   icon,
@@ -69,8 +83,8 @@ export const ConnectionsPanel = ({
 }): JSX.Element => {
   const [state, setState] = useState<State>({
     loading: true,
-    providers: { google: false },
-    me: { user: null, connections: { google: false } },
+    providers: [],
+    me: { user: null, connections: {} },
     integrations: [],
   });
 
@@ -90,7 +104,6 @@ export const ConnectionsPanel = ({
   }, [client]);
 
   const has = (id: string): boolean => state.integrations.some((i) => i.id === id);
-  const googleConnected = state.me.connections.google;
 
   return (
     <div
@@ -119,27 +132,43 @@ export const ConnectionsPanel = ({
                 <h3 className="text-xs font-medium uppercase tracking-wide text-muted">
                   Your accounts (OAuth)
                 </h3>
-                <Row
-                  icon="🗓️"
-                  name="Google — Gmail & Calendar"
-                  detail={
-                    googleConnected
-                      ? `Connected as ${state.me.user?.email ?? 'your account'}`
-                      : state.providers.google
-                        ? 'Connect to let your assistant read mail and manage your calendar'
-                        : 'Server not configured (set FORGE_GOOGLE_CLIENT_ID / SECRET)'
-                  }
-                  status={
-                    googleConnected
-                      ? 'connected'
-                      : state.providers.google
-                        ? 'available'
-                        : 'unavailable'
-                  }
-                  {...(state.providers.google && !googleConnected
-                    ? { action: <ConnectButton href="/auth/google/start" label="Connect" /> }
-                    : {})}
-                />
+                {state.providers.length === 0 ? (
+                  <p className="rounded-xl border border-dashed border-border bg-surface/40 p-3 text-xs text-muted">
+                    No OAuth connectors configured. Set, e.g., FORGE_GOOGLE_CLIENT_ID /
+                    FORGE_GOOGLE_CLIENT_SECRET on the server to enable a Connect button here.
+                  </p>
+                ) : (
+                  state.providers.map((provider) => {
+                    const meta = CONNECTOR_META[provider.id] ?? {
+                      icon: '🔌',
+                      detail: 'Connect your account',
+                    };
+                    const connected = state.me.connections[provider.id] === true;
+                    return (
+                      <Row
+                        key={provider.id}
+                        icon={meta.icon}
+                        name={provider.label}
+                        detail={
+                          connected
+                            ? `Connected as ${state.me.user?.email ?? 'your account'}`
+                            : meta.detail
+                        }
+                        status={connected ? 'connected' : 'available'}
+                        {...(connected
+                          ? {}
+                          : {
+                              action: (
+                                <ConnectButton
+                                  href={`/auth/${provider.id}/start`}
+                                  label="Connect"
+                                />
+                              ),
+                            })}
+                      />
+                    );
+                  })
+                )}
               </section>
 
               <section className="space-y-2">
@@ -166,18 +195,12 @@ export const ConnectionsPanel = ({
                   }
                   status={has('whatsapp') ? 'connected' : 'unavailable'}
                 />
-                <Row
-                  icon="💬"
-                  name="Slack"
-                  detail={has('slack') ? 'Connected' : 'Set FORGE_SLACK_TOKEN on the server'}
-                  status={has('slack') ? 'connected' : 'unavailable'}
-                />
               </section>
 
               <p className="text-xs text-muted">
-                Google uses per-user OAuth — each user connects their own account.
-                Telegram/WhatsApp/Slack are configured once on the server (bot token / Business
-                API), not per-user sign-in.
+                OAuth connectors are per-user — each user connects their own account. Telegram and
+                WhatsApp are configured once on the server (bot token / Business API), not per-user
+                sign-in.
               </p>
             </>
           )}
