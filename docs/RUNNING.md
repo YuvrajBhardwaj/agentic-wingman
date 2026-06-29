@@ -8,13 +8,13 @@ How to run Forgewright locally — the API server, the web UI, and the model beh
 
 ## 1. Prerequisites
 
-| Tool      | Version | Notes                                                                  |
-| --------- | ------- | ---------------------------------------------------------------------- |
-| Node.js   | ≥ 20.12 | `process.loadEnvFile` (auto `.env`) needs 20.12+. Node 22/24 fine.     |
-| pnpm      | ≥ 9     | `corepack enable pnpm` (ships with Node), or `npm i -g pnpm`.          |
-| git       | any     | Used by the git tools, autopilot snapshots, and the agent.             |
-| bash      | any     | Used by the persistent terminal and shell tool (Git Bash on Windows). |
-| A model   | —       | Local (Ollama / LM Studio) **or** a cloud key (Groq / NVIDIA / etc.).  |
+| Tool    | Version | Notes                                                                 |
+| ------- | ------- | --------------------------------------------------------------------- |
+| Node.js | ≥ 20.12 | `process.loadEnvFile` (auto `.env`) needs 20.12+. Node 22/24 fine.    |
+| pnpm    | ≥ 9     | `corepack enable pnpm` (ships with Node), or `npm i -g pnpm`.         |
+| git     | any     | Used by the git tools, autopilot snapshots, and the agent.            |
+| bash    | any     | Used by the persistent terminal and shell tool (Git Bash on Windows). |
+| A model | —       | Local (Ollama / LM Studio) **or** a cloud key (Groq / NVIDIA / etc.). |
 
 > **Windows note:** if `corepack enable pnpm` fails with EPERM (Node in `Program Files`), use `npm i -g pnpm` instead, or run commands via `corepack pnpm@9 …`.
 
@@ -134,14 +134,14 @@ curl -X POST http://localhost:4317/agent/runs/<runId>/approvals/<approvalId> \
 
 All set in `.env` (see [.env.example](../.env.example)):
 
-| Capability               | Env                                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------ |
+| Capability               | Env                                                                                   |
+| ------------------------ | ------------------------------------------------------------------------------------- |
 | **Autopilot** verify cmd | `FORGE_VERIFY_CMD="pnpm test"` → `POST /agent/autopilot`                              |
 | **MCP servers**          | `FORGE_MCP_SERVERS=[{"name":"github","command":"npx","args":[...],"trust":"prompt"}]` |
 | **Telegram**             | `FORGE_TELEGRAM_TOKEN` (send + inbound polling)                                       |
 | **WhatsApp**             | `FORGE_WHATSAPP_PHONE_ID`, `FORGE_WHATSAPP_TOKEN`, `FORGE_WHATSAPP_VERIFY_TOKEN`      |
 | **Slack / Webhook**      | `FORGE_SLACK_TOKEN`, `FORGE_WEBHOOK_URL`                                              |
-| **Sign in with Google**  | `FORGE_GOOGLE_CLIENT_ID`, `FORGE_GOOGLE_CLIENT_SECRET`, `FORGE_SECRET_KEY` (hex 32)  |
+| **Sign in with Google**  | `FORGE_GOOGLE_CLIENT_ID`, `FORGE_GOOGLE_CLIENT_SECRET`, `FORGE_SECRET_KEY` (hex 32)   |
 
 Generate a secret key for encrypting per-user OAuth tokens:
 

@@ -39,7 +39,7 @@ packages/
 
 Server endpoints: `/health`, `/agent/runs` (SSE) + approval, `/agent/autopilot` (SSE), `/memory`, `/pkb/search`, `/git/*`, `/mcp/servers`, `/agents/{roles,collaborate}`, `/documents/{parse,formats}`, `/integrations` (+ `/:id/send`, `/webhooks/whatsapp`). **Multi-tenant auth:** `/auth/google/{start,callback}`, `/auth/logout`, `/me`, `/me/google/agenda` (per-user, from the user's connected Google account). Config via `FORGE_*` env; `FORGE_SECRET_KEY` (hex32) encrypts per-user OAuth tokens.
 
-**Multi-tenancy status:** auth + accounts + encrypted credential vault + "Connect Google" OAuth flow are built and tested (in-memory store; swap for SQLite/Postgres behind `AccountStore`). NOT yet done: per-user isolation of the *existing* single-tenant subsystems (memory, conversations, indexer, integrations are still one global tenant). Making the agent/memory per-user is the next layer.
+**Multi-tenancy status:** auth + accounts + encrypted credential vault + "Connect Google" OAuth flow are built and tested (in-memory store; swap for SQLite/Postgres behind `AccountStore`). NOT yet done: per-user isolation of the _existing_ single-tenant subsystems (memory, conversations, indexer, integrations are still one global tenant). Making the agent/memory per-user is the next layer.
 
 ## How the agent works (Phase 2)
 
