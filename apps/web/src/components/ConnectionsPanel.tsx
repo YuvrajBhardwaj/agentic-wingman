@@ -30,12 +30,18 @@ const Row = ({
         : 'bg-elevated text-muted';
   return (
     <div className="flex items-center gap-3 rounded-xl border border-border bg-surface/60 p-3">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-elevated text-lg">{icon}</div>
+      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-elevated text-lg">
+        {icon}
+      </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-medium text-slate-100">{name}</span>
           <span className={`rounded px-1.5 py-0.5 text-[10px] uppercase tracking-wide ${badge}`}>
-            {status === 'connected' ? 'connected' : status === 'available' ? 'available' : 'not set up'}
+            {status === 'connected'
+              ? 'connected'
+              : status === 'available'
+                ? 'available'
+                : 'not set up'}
           </span>
         </div>
         <p className="truncate text-xs text-muted">{detail}</p>
@@ -123,7 +129,13 @@ export const ConnectionsPanel = ({
                         ? 'Connect to let your assistant read mail and manage your calendar'
                         : 'Server not configured (set FORGE_GOOGLE_CLIENT_ID / SECRET)'
                   }
-                  status={googleConnected ? 'connected' : state.providers.google ? 'available' : 'unavailable'}
+                  status={
+                    googleConnected
+                      ? 'connected'
+                      : state.providers.google
+                        ? 'available'
+                        : 'unavailable'
+                  }
                   {...(state.providers.google && !googleConnected
                     ? { action: <ConnectButton href="/auth/google/start" label="Connect" /> }
                     : {})}
@@ -137,13 +149,21 @@ export const ConnectionsPanel = ({
                 <Row
                   icon="✈️"
                   name="Telegram"
-                  detail={has('telegram') ? 'Bot connected — sends and receives messages' : 'Set FORGE_TELEGRAM_TOKEN on the server'}
+                  detail={
+                    has('telegram')
+                      ? 'Bot connected — sends and receives messages'
+                      : 'Set FORGE_TELEGRAM_TOKEN on the server'
+                  }
                   status={has('telegram') ? 'connected' : 'unavailable'}
                 />
                 <Row
                   icon="🟢"
                   name="WhatsApp"
-                  detail={has('whatsapp') ? 'Business API connected (inbound via webhook)' : 'Set FORGE_WHATSAPP_PHONE_ID / TOKEN on the server'}
+                  detail={
+                    has('whatsapp')
+                      ? 'Business API connected (inbound via webhook)'
+                      : 'Set FORGE_WHATSAPP_PHONE_ID / TOKEN on the server'
+                  }
                   status={has('whatsapp') ? 'connected' : 'unavailable'}
                 />
                 <Row
@@ -155,8 +175,9 @@ export const ConnectionsPanel = ({
               </section>
 
               <p className="text-xs text-muted">
-                Google uses per-user OAuth — each user connects their own account. Telegram/WhatsApp/Slack are
-                configured once on the server (bot token / Business API), not per-user sign-in.
+                Google uses per-user OAuth — each user connects their own account.
+                Telegram/WhatsApp/Slack are configured once on the server (bot token / Business
+                API), not per-user sign-in.
               </p>
             </>
           )}

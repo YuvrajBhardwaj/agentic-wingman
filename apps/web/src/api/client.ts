@@ -123,7 +123,9 @@ export const createClient = (fetchImpl: typeof fetch = fetch): ForgewrightClient
     },
 
     async listIntegrations() {
-      const data = await json<{ integrations: IntegrationInfo[] }>(await fetchImpl('/integrations'));
+      const data = await json<{ integrations: IntegrationInfo[] }>(
+        await fetchImpl('/integrations'),
+      );
       return data.integrations;
     },
 

@@ -27,11 +27,7 @@ export const Message = ({
       <Avatar />
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="mb-1 text-xs font-medium text-muted">Forgewright</div>
-        {text.trim() === '' ? (
-          <span className="text-muted">…</span>
-        ) : (
-          <Markdown content={text} />
-        )}
+        {text.trim() === '' ? <span className="text-muted">…</span> : <Markdown content={text} />}
       </div>
     </div>
   );
