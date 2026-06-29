@@ -54,6 +54,11 @@ export const registerAuthRoutes = (app: FastifyInstance, deps: AuthRouteDeps): v
     return user;
   };
 
+  // Which OAuth providers are configured (so the UI shows the right buttons).
+  app.get('/auth/providers', async (_request, reply) =>
+    reply.send({ google: deps.googleAuthFlow !== undefined }),
+  );
+
   // Begin "Connect with Google".
   app.get('/auth/google/start', async (_request, reply) => {
     if (!deps.googleAuthFlow) {

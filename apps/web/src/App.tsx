@@ -1,11 +1,16 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import { captureSessionFromUrl } from './api/auth.ts';
 import { createClient } from './api/client.ts';
 import { CommandPalette, type Command } from './components/CommandPalette.tsx';
 import { Composer } from './components/Composer.tsx';
+import { ConnectionsPanel } from './components/ConnectionsPanel.tsx';
 import { MemoryPanel } from './components/MemoryPanel.tsx';
 import { Transcript } from './components/Transcript.tsx';
 import { useAgentRun } from './hooks/useAgentRun.ts';
+
+// Capture an OAuth session token from the callback redirect before first render.
+captureSessionFromUrl();
 
 const newConversationId = (): string =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `c-${Date.now()}`;

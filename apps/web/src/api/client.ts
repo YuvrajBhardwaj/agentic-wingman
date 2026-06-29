@@ -1,7 +1,20 @@
 import type { Memory, MemoryKind } from '@forgewright/types';
 
+import { authHeader } from './auth.ts';
 import type { AppEvent } from './events.ts';
 import { parseEventStream } from './sse.ts';
+
+export interface CurrentUser {
+  readonly user: { id: string; email: string; name?: string } | null;
+  readonly connections: { google: boolean };
+}
+
+export interface IntegrationInfo {
+  readonly id: string;
+  readonly name: string;
+  readonly kind: string;
+  readonly capabilities: readonly string[];
+}
 
 export interface RunAgentParams {
   readonly input: string;
@@ -26,6 +39,10 @@ export interface ForgewrightClient {
   searchMemories(query: string, limit?: number): Promise<readonly Memory[]>;
   addMemory(memory: NewMemory): Promise<Memory>;
   forgetMemory(id: string): Promise<void>;
+  authProviders(): Promise<{ google: boolean }>;
+  me(): Promise<CurrentUser>;
+  listIntegrations(): Promise<readonly IntegrationInfo[]>;
+  logout(): Promise<void>;
 }
 
 /** Create an API client. `fetchImpl` is injectable for tests. */
@@ -44,7 +61,7 @@ export const createClient = (fetchImpl: typeof fetch = fetch): ForgewrightClient
 
       const init: RequestInit = {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: { 'content-type': 'application/json', ...authHeader() },
         body: JSON.stringify(body),
       };
       if (params.signal) init.signal = params.signal;
@@ -89,6 +106,29 @@ export const createClient = (fetchImpl: typeof fetch = fetch): ForgewrightClient
 
     async forgetMemory(id) {
       await fetchImpl(`/memory/${id}`, { method: 'DELETE' });
+    },
+
+    async authProviders() {
+      try {
+        return await json<{ google: boolean }>(await fetchImpl('/auth/providers'));
+      } catch {
+        return { google: false };
+      }
+    },
+
+    async me() {
+      const response = await fetchImpl('/me', { headers: authHeader() });
+      if (response.status === 401) return { user: null, connections: { google: false } };
+      return json<CurrentUser>(response);
+    },
+
+    async listIntegrations() {
+      const data = await json<{ integrations: IntegrationInfo[] }>(await fetchImpl('/integrations'));
+      return data.integrations;
+    },
+
+    async logout() {
+      await fetchImpl('/auth/logout', { method: 'POST', headers: authHeader() });
     },
   };
 };
