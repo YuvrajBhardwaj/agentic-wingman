@@ -99,12 +99,10 @@ export const registerAgentRoutes = (app: FastifyInstance, deps: AgentRouteDeps):
     };
 
     let assistantText = '';
-    let completed = false;
 
     try {
       for await (const event of agent.run(task)) {
         if (event.type === 'message') assistantText += event.delta;
-        if (event.type === 'done' && event.reason === 'completed') completed = true;
         sse.send(event.type, event);
       }
     } catch (error) {
@@ -119,23 +117,9 @@ export const registerAgentRoutes = (app: FastifyInstance, deps: AgentRouteDeps):
     }
 
     // Persist this turn so the next message in the session has continuity.
+    // (Chat history lives here; long-term memory is for distilled cross-session
+    // knowledge — preferences, decisions, recurring bugs — not every response.)
     deps.conversationStore.append(conversationId, body.input, assistantText);
-
-    // Auto-capture a summary of completed runs into long-term memory.
-    if (completed && deps.memoryStore && assistantText.trim() !== '') {
-      try {
-        await deps.memoryStore.remember({
-          kind: 'conversation',
-          content: `Task: ${body.input}\nOutcome: ${assistantText.slice(0, 1000)}`,
-          tags: [conversationId],
-          importance: 1,
-        });
-      } catch (error) {
-        deps.logger.warn('memory_capture_failed', {
-          message: error instanceof Error ? error.message : String(error),
-        });
-      }
-    }
   });
 
   // Resolve a pending approval for an in-flight run.
