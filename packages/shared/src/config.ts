@@ -106,6 +106,8 @@ export const loadConfig = (overrides: ConfigOverrides = {}): ForgewrightConfig =
     },
     ...(e.FORGE_VERIFY_CMD ? { verifyCommand: e.FORGE_VERIFY_CMD } : {}),
     mcpServers: parseMcpServers(e.FORGE_MCP_SERVERS),
+    ...(e.FORGE_CONTEXT_BUDGET ? { contextTokenBudget: num(e.FORGE_CONTEXT_BUDGET, 6000) } : {}),
+    ...(e.FORGE_AGENT_MAX_TOKENS ? { agentMaxTokens: num(e.FORGE_AGENT_MAX_TOKENS, 2048) } : {}),
   };
 
   validateConfig(config);
