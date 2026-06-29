@@ -85,11 +85,9 @@ export const registerAuthRoutes = (app: FastifyInstance, deps: AuthRouteDeps): v
 
       const tokens = await flow.exchangeCode(code);
       if (!tokens.refreshToken) {
-        return reply
-          .status(400)
-          .send({
-            error: { message: 'no refresh token returned; re-consent with offline access' },
-          });
+        return reply.status(400).send({
+          error: { message: 'no refresh token returned; re-consent with offline access' },
+        });
       }
       const profile = await flow.getUserInfo(tokens.accessToken);
       const user = await deps.accountStore.upsertUserByEmail(profile.email, profile.name);
