@@ -135,10 +135,11 @@ curl -N -X POST http://127.0.0.1:4317/agent/autopilot \
 ### Run the UI
 
 ```bash
-pnpm --filter @forgewright/server dev    # API on :4317
-pnpm --filter @forgewright/web dev        # UI on :5273 (proxies to the server)
+pnpm dev                                  # starts API (:4317) + UI (:5273)
 # open http://localhost:5273
 ```
+
+📖 **Full guides:** [docs/RUNNING.md](docs/RUNNING.md) (run locally, configure a model, all options) · [docs/DEPLOY.md](docs/DEPLOY.md) (production, Docker, reverse proxy, OAuth, caveats).
 
 ## Quickstart
 
