@@ -64,7 +64,8 @@ export const registerAutopilotRoutes = (app: FastifyInstance, deps: AutopilotRou
     sse.send('autopilot_started', { type: 'autopilot_started', conversationId, verifyCommand });
 
     const controller = new AbortController();
-    request.raw.on('close', () => controller.abort());
+    // Client disconnect is signalled on the response stream, not the request.
+    reply.raw.on('close', () => controller.abort());
 
     const mcpTools = deps.mcpHost?.tools() ?? [];
     const { agent } = createAgent({

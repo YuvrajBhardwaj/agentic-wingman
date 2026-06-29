@@ -64,7 +64,10 @@ export const registerAgentRoutes = (app: FastifyInstance, deps: AgentRouteDeps):
       controller.abort();
       gate.rejectAll();
     };
-    request.raw.on('close', onClose);
+    // Detect client disconnect on the RESPONSE stream. (request.raw 'close' fires
+    // as soon as the POST body is received — before streaming — so it must not be
+    // used here or the run aborts immediately.)
+    reply.raw.on('close', onClose);
 
     const mcpTools = deps.mcpHost?.tools() ?? [];
     const mcpRules = deps.mcpHost?.permissionRules() ?? [];
@@ -102,7 +105,7 @@ export const registerAgentRoutes = (app: FastifyInstance, deps: AgentRouteDeps):
         message: error instanceof Error ? error.message : String(error),
       });
     } finally {
-      request.raw.off('close', onClose);
+      reply.raw.off('close', onClose);
       deps.runManager.unregister(runId);
       sse.end();
     }

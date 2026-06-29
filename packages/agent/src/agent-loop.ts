@@ -31,6 +31,8 @@ export interface AgentLoopOptions {
   /** Optional long-term memory; relevant memories are injected each run. */
   readonly memoryStore?: MemoryStore;
   readonly memoryLimit?: number;
+  /** Cap on output tokens per turn (helps with rate-limited providers). */
+  readonly maxOutputTokens?: number;
   readonly extraSystemPrompt?: string;
 }
 
@@ -178,6 +180,7 @@ export class AgentLoop implements Agent {
       messages,
       tools: this.options.registry.specs(),
       signal,
+      ...(this.options.maxOutputTokens ? { maxTokens: this.options.maxOutputTokens } : {}),
     });
 
     for await (const chunk of stream as AsyncIterable<ChatChunk>) {

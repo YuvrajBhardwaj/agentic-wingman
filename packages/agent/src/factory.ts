@@ -32,6 +32,10 @@ export interface CreateAgentOptions {
   readonly memoryStore?: MemoryStore;
   /** Extra tools to register alongside the builtins (e.g. from MCP servers). */
   readonly extraTools?: readonly Tool[];
+  /** Token budget for injected workspace context (lower for rate-limited models). */
+  readonly contextTokenBudget?: number;
+  /** Cap on output tokens per turn. */
+  readonly maxOutputTokens?: number;
   /** Injected for tests. */
   readonly fetchImpl?: typeof fetch;
 }
@@ -78,6 +82,8 @@ export const createAgent = (options: CreateAgentOptions): CreatedAgent => {
     workspaceRoot: options.config.workspaceRoot,
     ...(options.contextBuilder ? { contextBuilder: options.contextBuilder } : {}),
     ...(options.memoryStore ? { memoryStore: options.memoryStore } : {}),
+    ...(options.contextTokenBudget ? { contextTokenBudget: options.contextTokenBudget } : {}),
+    ...(options.maxOutputTokens ? { maxOutputTokens: options.maxOutputTokens } : {}),
   });
 
   return { agent, registry, router, permissions };
