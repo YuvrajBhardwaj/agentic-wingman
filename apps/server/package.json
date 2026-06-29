@@ -1,0 +1,36 @@
+{
+  "name": "@forgewright/server",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -b",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src",
+    "test": "vitest run",
+    "clean": "rimraf dist *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@forgewright/accounts": "workspace:*",
+    "@forgewright/agent": "workspace:*",
+    "@forgewright/autopilot": "workspace:*",
+    "@forgewright/context": "workspace:*",
+    "@forgewright/documents": "workspace:*",
+    "@forgewright/git": "workspace:*",
+    "@forgewright/google": "workspace:*",
+    "@forgewright/integrations": "workspace:*",
+    "@forgewright/jobs": "workspace:*",
+    "@forgewright/llm": "workspace:*",
+    "@forgewright/mcp": "workspace:*",
+    "@forgewright/memory": "workspace:*",
+    "@forgewright/orchestrator": "workspace:*",
+    "@forgewright/planner": "workspace:*",
+    "@forgewright/shared": "workspace:*",
+    "@forgewright/tools": "workspace:*",
+    "@forgewright/types": "workspace:*",
+    "fastify": "^5.2.0"
+  }
+}

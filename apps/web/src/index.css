@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-surface text-slate-200 antialiased;
+  }
+}
+
+/* highlight.js theme (atom-one-dark-ish) scoped to code blocks */
+.hljs {
+  @apply bg-elevated text-slate-200;
+}
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-built_in {
+  color: #cba6f7;
+}
+.hljs-string,
+.hljs-attr {
+  color: #a6e3a1;
+}
+.hljs-number,
+.hljs-literal {
+  color: #fab387;
+}
+.hljs-comment {
+  color: #6c7086;
+  font-style: italic;
+}
+.hljs-function,
+.hljs-title {
+  color: #89b4fa;
+}
+
+.markdown p {
+  @apply my-2 leading-relaxed;
+}
+.markdown ul {
+  @apply my-2 list-disc pl-5;
+}
+.markdown ol {
+  @apply my-2 list-decimal pl-5;
+}
+.markdown code:not(pre code) {
+  @apply rounded bg-elevated px-1 py-0.5 font-mono text-sm text-accent;
+}
+.markdown pre {
+  @apply my-2 overflow-x-auto rounded-lg bg-elevated p-3 text-sm;
+}
+.markdown a {
+  @apply text-accent underline;
+}
