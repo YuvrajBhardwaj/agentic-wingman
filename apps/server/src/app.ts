@@ -14,6 +14,7 @@ import { McpHost } from '@forgewright/mcp';
 import { TOKENS, type Container } from '@forgewright/shared';
 import Fastify, { type FastifyInstance } from 'fastify';
 
+import { ConversationStore } from './agent/conversation-store.js';
 import { AgentRunManager } from './agent/run-manager.js';
 import { buildContainer } from './container.js';
 import { registerAgentRoutes } from './routes/agent.js';
@@ -182,6 +183,7 @@ export const buildApp = (options: BuildAppOptions = {}): FastifyInstance => {
     logger,
     router,
     runManager: new AgentRunManager(),
+    conversationStore: new ConversationStore(),
     contextBuilder,
     memoryStore,
     mcpHost,

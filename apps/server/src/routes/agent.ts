@@ -88,10 +88,12 @@ export const registerAgentRoutes = (app: FastifyInstance, deps: AgentRouteDeps):
       ...(deps.config.agentMaxTokens ? { maxOutputTokens: deps.config.agentMaxTokens } : {}),
     });
 
+    const history = deps.conversationStore.history(conversationId);
     const task: AgentTask = {
       conversationId,
       input: body.input,
       signal: controller.signal,
+      ...(history.length > 0 ? { history } : {}),
       ...(focusPaths ? { focusPaths } : {}),
       ...(maxSteps !== undefined ? { maxSteps } : {}),
     };
@@ -115,6 +117,9 @@ export const registerAgentRoutes = (app: FastifyInstance, deps: AgentRouteDeps):
       deps.runManager.unregister(runId);
       sse.end();
     }
+
+    // Persist this turn so the next message in the session has continuity.
+    deps.conversationStore.append(conversationId, body.input, assistantText);
 
     // Auto-capture a summary of completed runs into long-term memory.
     if (completed && deps.memoryStore && assistantText.trim() !== '') {
