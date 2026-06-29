@@ -80,6 +80,10 @@ export const registerAgentRoutes = (app: FastifyInstance, deps: AgentRouteDeps):
       ...(deps.memoryStore ? { memoryStore: deps.memoryStore } : {}),
       ...(mcpTools.length > 0 ? { extraTools: mcpTools } : {}),
       ...(mcpRules.length > 0 ? { permissionRules: mcpRules } : {}),
+      ...(deps.config.contextTokenBudget
+        ? { contextTokenBudget: deps.config.contextTokenBudget }
+        : {}),
+      ...(deps.config.agentMaxTokens ? { maxOutputTokens: deps.config.agentMaxTokens } : {}),
     });
 
     const task: AgentTask = {
