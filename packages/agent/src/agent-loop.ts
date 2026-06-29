@@ -104,6 +104,11 @@ export class AgentLoop implements Agent {
       }
     }
 
+    // Prior conversation turns give the agent multi-turn continuity within a session.
+    if (task.history && task.history.length > 0) {
+      messages.push(...task.history);
+    }
+
     messages.push({ role: 'user', content: task.input });
 
     try {

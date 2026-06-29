@@ -3,6 +3,8 @@ import type { ChatMessage, TokenUsage } from './llm.js';
 export interface AgentTask {
   readonly conversationId: string;
   readonly input: string;
+  /** Prior turns in this conversation, so the agent has multi-turn continuity. */
+  readonly history?: readonly ChatMessage[];
   /** Files the user is focused on, used to seed context. */
   readonly focusPaths?: readonly string[];
   readonly maxSteps?: number;
