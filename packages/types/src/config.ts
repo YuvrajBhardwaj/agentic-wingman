@@ -65,4 +65,8 @@ export interface ForgewrightConfig {
   readonly verifyCommand?: string;
   /** External MCP servers to connect and expose tools from. */
   readonly mcpServers: readonly McpServerConfig[];
+  /** Token budget for injected workspace context (lower for rate-limited models). */
+  readonly contextTokenBudget?: number;
+  /** Cap on output tokens per agent turn. */
+  readonly agentMaxTokens?: number;
 }
