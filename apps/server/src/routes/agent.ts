@@ -13,6 +13,7 @@ import type {
 import type { FastifyInstance } from 'fastify';
 
 import { ApprovalGate } from '../agent/approval-gate.js';
+import type { ConversationStore } from '../agent/conversation-store.js';
 import type { AgentRunManager } from '../agent/run-manager.js';
 import { SseStream } from '../agent/sse.js';
 
@@ -21,6 +22,7 @@ export interface AgentRouteDeps {
   readonly logger: Logger;
   readonly router: ModelRouter;
   readonly runManager: AgentRunManager;
+  readonly conversationStore: ConversationStore;
   readonly contextBuilder?: ContextBuilder;
   readonly memoryStore?: MemoryStore;
   readonly mcpHost?: McpHost;
