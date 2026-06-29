@@ -5,15 +5,13 @@ import { createClient } from './api/client.ts';
 import { CommandPalette, type Command } from './components/CommandPalette.tsx';
 import { Composer } from './components/Composer.tsx';
 import { ConnectionsPanel } from './components/ConnectionsPanel.tsx';
+import { ConversationSidebar } from './components/ConversationSidebar.tsx';
 import { MemoryPanel } from './components/MemoryPanel.tsx';
 import { Transcript } from './components/Transcript.tsx';
-import { useAgentRun } from './hooks/useAgentRun.ts';
+import { useChat } from './hooks/useChat.ts';
 
 // Capture an OAuth session token from the callback redirect before first render.
 captureSessionFromUrl();
-
-const newConversationId = (): string =>
-  typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `c-${Date.now()}`;
 
 const IconButton = ({
   label,
@@ -43,26 +41,27 @@ const IconButton = ({
 
 export const App = (): JSX.Element => {
   const client = useMemo(() => createClient(), []);
-  const [conversationId, setConversationId] = useState(newConversationId);
-  const run = useAgentRun(client, conversationId);
+  const chat = useChat(client);
 
   const [memoryVersion, setMemoryVersion] = useState(0);
   const [showMemory, setShowMemory] = useState(true);
+  const [showSidebar, setShowSidebar] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [connectionsOpen, setConnectionsOpen] = useState(false);
 
+  const status = chat.active?.state.status;
   useEffect(() => {
-    if (run.state.status === 'done') setMemoryVersion((v) => v + 1);
-  }, [run.state.status]);
-
-  const newChat = (): void => {
-    run.reset();
-    setConversationId(newConversationId());
-  };
+    if (status === 'done') setMemoryVersion((v) => v + 1);
+  }, [status]);
 
   const commands: Command[] = [
-    { id: 'new-chat', label: 'New chat', hint: 'reset conversation', run: newChat },
-    { id: 'stop', label: 'Stop the current run', run: run.abort },
+    { id: 'new-chat', label: 'New chat', hint: 'start a session', run: chat.newChat },
+    { id: 'stop', label: 'Stop the current run', run: chat.abort },
+    {
+      id: 'toggle-sidebar',
+      label: showSidebar ? 'Hide conversations' : 'Show conversations',
+      run: () => setShowSidebar((v) => !v),
+    },
     {
       id: 'toggle-memory',
       label: showMemory ? 'Hide memory panel' : 'Show memory panel',
@@ -72,11 +71,6 @@ export const App = (): JSX.Element => {
       id: 'connections',
       label: 'Connect accounts (Google, messaging)',
       run: () => setConnectionsOpen(true),
-    },
-    {
-      id: 'refresh-memory',
-      label: 'Refresh memory panel',
-      run: () => setMemoryVersion((v) => v + 1),
     },
   ];
 
@@ -91,6 +85,8 @@ export const App = (): JSX.Element => {
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
+  const usage = chat.active?.state.usage;
+
   return (
     <div className="flex h-full flex-col bg-surface">
       <CommandPalette
@@ -103,20 +99,34 @@ export const App = (): JSX.Element => {
       ) : null}
 
       <header className="z-10 flex items-center gap-3 border-b border-border bg-panel/70 px-4 py-2.5 backdrop-blur">
+        <button
+          type="button"
+          onClick={() => setShowSidebar((v) => !v)}
+          aria-label="Toggle conversations"
+          className="rounded-lg p-1.5 text-muted transition hover:bg-elevated hover:text-slate-200"
+        >
+          <svg
+            viewBox="0 0 20 20"
+            className="h-5 w-5"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.8"
+          >
+            <rect x="3" y="4" width="14" height="12" rx="2" />
+            <path d="M8 4v12" />
+          </svg>
+        </button>
         <div className="flex items-center gap-2">
           <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-[#cba6f7] text-xs font-bold text-surface">
             F
           </div>
           <span className="text-sm font-semibold text-slate-100">Forgewright</span>
-          <span className="rounded-md bg-elevated px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
-            agent
-          </span>
         </div>
 
         <div className="ml-auto flex items-center gap-2">
-          {run.state.usage ? (
+          {usage ? (
             <span className="hidden text-xs text-muted sm:inline">
-              {run.state.usage.totalTokens.toLocaleString()} tokens
+              {usage.totalTokens.toLocaleString()} tokens
             </span>
           ) : null}
           <IconButton label="Connect accounts" onClick={() => setConnectionsOpen(true)}>
@@ -132,26 +142,35 @@ export const App = (): JSX.Element => {
           >
             Memory
           </IconButton>
-          <IconButton label="New chat" onClick={newChat}>
-            New chat
-          </IconButton>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
+        {showSidebar ? (
+          <aside className="hidden w-64 shrink-0 border-r border-border bg-panel/40 md:block">
+            <ConversationSidebar
+              conversations={chat.conversations}
+              activeId={chat.activeId}
+              onSelect={chat.select}
+              onNew={chat.newChat}
+              onRemove={chat.remove}
+            />
+          </aside>
+        ) : null}
+
         <main className="flex min-w-0 flex-1 flex-col">
           <div className="flex-1 overflow-y-auto">
             <Transcript
-              items={run.state.items}
-              isRunning={run.isRunning}
-              onApprove={(id, approved) => void run.approve(id, approved)}
-              onSuggest={(text) => void run.submit(text)}
+              items={chat.active?.state.items ?? []}
+              isRunning={chat.isRunning}
+              onApprove={(id, approved) => void chat.approve(id, approved)}
+              onSuggest={(text) => void chat.submit(text)}
             />
           </div>
           <Composer
-            isRunning={run.isRunning}
-            onSubmit={(text) => void run.submit(text)}
-            onStop={run.abort}
+            isRunning={chat.isRunning}
+            onSubmit={(text) => void chat.submit(text)}
+            onStop={chat.abort}
           />
         </main>
 
