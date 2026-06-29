@@ -32,11 +32,14 @@ packages/
   documents/      DocumentRegistry + readers (CSV/XLSX/ZIP/image/MD/JSON) + summarize/compare.
   research/       ResearchAgent (search→fetch→synthesize→cite) + web utils + Crawler.
   integrations/   Plugin framework + Telegram/WhatsApp/Slack/Webhook clients + IntegrationManager.
-  google/         Gmail + Google Calendar clients (OAuth refresh) + daily-agenda builder.
+  google/         Gmail + Google Calendar clients + GoogleAuthFlow (OAuth consent) + daily agenda.
+  accounts/       Multi-tenant: User/Session/Credential model, in-memory store, AES-256-GCM vault.
   agent/          The agent loop: context + memory → LLM → tools → repeat; system prompt; factory.
 ```
 
-Server endpoints: `/health`, `/agent/runs` (SSE) + approval, `/agent/autopilot` (SSE; needs `FORGE_VERIFY_CMD`), `/memory` CRUD/search, `/pkb/search`, `/git/*`, `/mcp/servers` (+ reload), `/agents/{roles,collaborate}`, `/documents/{parse,formats}`, `/integrations` (+ `/:id/send`). Config via `FORGE_*` env (MCP servers, integration tokens, verify command).
+Server endpoints: `/health`, `/agent/runs` (SSE) + approval, `/agent/autopilot` (SSE), `/memory`, `/pkb/search`, `/git/*`, `/mcp/servers`, `/agents/{roles,collaborate}`, `/documents/{parse,formats}`, `/integrations` (+ `/:id/send`, `/webhooks/whatsapp`). **Multi-tenant auth:** `/auth/google/{start,callback}`, `/auth/logout`, `/me`, `/me/google/agenda` (per-user, from the user's connected Google account). Config via `FORGE_*` env; `FORGE_SECRET_KEY` (hex32) encrypts per-user OAuth tokens.
+
+**Multi-tenancy status:** auth + accounts + encrypted credential vault + "Connect Google" OAuth flow are built and tested (in-memory store; swap for SQLite/Postgres behind `AccountStore`). NOT yet done: per-user isolation of the *existing* single-tenant subsystems (memory, conversations, indexer, integrations are still one global tenant). Making the agent/memory per-user is the next layer.
 
 ## How the agent works (Phase 2)
 
