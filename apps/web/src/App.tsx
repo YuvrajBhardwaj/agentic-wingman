@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { createClient } from './api/client.ts';
 import { CommandPalette, type Command } from './components/CommandPalette.tsx';
@@ -10,37 +10,44 @@ import { useAgentRun } from './hooks/useAgentRun.ts';
 const newConversationId = (): string =>
   typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `c-${Date.now()}`;
 
+const IconButton = ({
+  label,
+  onClick,
+  children,
+  active = false,
+}: {
+  label: string;
+  onClick: () => void;
+  children: ReactNode;
+  active?: boolean;
+}): JSX.Element => (
+  <button
+    type="button"
+    onClick={onClick}
+    title={label}
+    aria-label={label}
+    className={`flex h-8 items-center gap-1.5 rounded-lg border px-2.5 text-xs transition ${
+      active
+        ? 'border-accent/40 bg-accent/10 text-accent'
+        : 'border-border text-slate-300 hover:bg-elevated'
+    }`}
+  >
+    {children}
+  </button>
+);
+
 export const App = (): JSX.Element => {
   const client = useMemo(() => createClient(), []);
   const [conversationId, setConversationId] = useState(newConversationId);
   const run = useAgentRun(client, conversationId);
 
-  const [sidebarWidth, setSidebarWidth] = useState(320);
   const [memoryVersion, setMemoryVersion] = useState(0);
+  const [showMemory, setShowMemory] = useState(true);
   const [paletteOpen, setPaletteOpen] = useState(false);
-  const draggingRef = useRef(false);
 
-  // Refresh the memory panel whenever a run completes (auto-capture happened).
   useEffect(() => {
     if (run.state.status === 'done') setMemoryVersion((v) => v + 1);
   }, [run.state.status]);
-
-  useEffect(() => {
-    const onMove = (e: MouseEvent): void => {
-      if (!draggingRef.current) return;
-      const width = Math.min(560, Math.max(220, window.innerWidth - e.clientX));
-      setSidebarWidth(width);
-    };
-    const onUp = (): void => {
-      draggingRef.current = false;
-    };
-    window.addEventListener('mousemove', onMove);
-    window.addEventListener('mouseup', onUp);
-    return () => {
-      window.removeEventListener('mousemove', onMove);
-      window.removeEventListener('mouseup', onUp);
-    };
-  }, []);
 
   const newChat = (): void => {
     run.reset();
@@ -51,13 +58,13 @@ export const App = (): JSX.Element => {
     { id: 'new-chat', label: 'New chat', hint: 'reset conversation', run: newChat },
     { id: 'stop', label: 'Stop the current run', run: run.abort },
     {
-      id: 'refresh-memory',
-      label: 'Refresh memory panel',
-      run: () => setMemoryVersion((v) => v + 1),
+      id: 'toggle-memory',
+      label: showMemory ? 'Hide memory panel' : 'Show memory panel',
+      run: () => setShowMemory((v) => !v),
     },
+    { id: 'refresh-memory', label: 'Refresh memory panel', run: () => setMemoryVersion((v) => v + 1) },
   ];
 
-  // Ctrl/Cmd+K toggles the command palette.
   useEffect(() => {
     const onKey = (e: KeyboardEvent): void => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
@@ -71,41 +78,49 @@ export const App = (): JSX.Element => {
 
   return (
     <div className="flex h-full flex-col bg-surface">
-      <CommandPalette
-        open={paletteOpen}
-        commands={commands}
-        onClose={() => setPaletteOpen(false)}
-      />
-      <header className="flex items-center gap-3 border-b border-border bg-panel px-4 py-2">
-        <span className="text-sm font-semibold text-slate-100">
-          Forge<span className="text-accent">wright</span>
-        </span>
-        <span className="rounded bg-elevated px-2 py-0.5 text-xs text-muted">local</span>
-        <div className="ml-auto flex items-center gap-3 text-xs text-muted">
-          {run.state.usage ? <span>{run.state.usage.totalTokens} tokens</span> : null}
-          <button
-            type="button"
-            onClick={() => setPaletteOpen(true)}
-            className="rounded-md border border-border px-2 py-1 text-slate-300 hover:bg-elevated"
-          >
+      <CommandPalette open={paletteOpen} commands={commands} onClose={() => setPaletteOpen(false)} />
+
+      <header className="z-10 flex items-center gap-3 border-b border-border bg-panel/70 px-4 py-2.5 backdrop-blur">
+        <div className="flex items-center gap-2">
+          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-accent to-[#cba6f7] text-xs font-bold text-surface">
+            F
+          </div>
+          <span className="text-sm font-semibold text-slate-100">Forgewright</span>
+          <span className="rounded-md bg-elevated px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted">
+            agent
+          </span>
+        </div>
+
+        <div className="ml-auto flex items-center gap-2">
+          {run.state.usage ? (
+            <span className="hidden text-xs text-muted sm:inline">
+              {run.state.usage.totalTokens.toLocaleString()} tokens
+            </span>
+          ) : null}
+          <IconButton label="Command palette" onClick={() => setPaletteOpen(true)}>
             ⌘K
-          </button>
-          <button
-            type="button"
-            onClick={newChat}
-            className="rounded-md border border-border px-2 py-1 text-slate-300 hover:bg-elevated"
+          </IconButton>
+          <IconButton
+            label="Toggle memory"
+            onClick={() => setShowMemory((v) => !v)}
+            active={showMemory}
           >
+            Memory
+          </IconButton>
+          <IconButton label="New chat" onClick={newChat}>
             New chat
-          </button>
+          </IconButton>
         </div>
       </header>
 
       <div className="flex min-h-0 flex-1">
         <main className="flex min-w-0 flex-1 flex-col">
-          <div className="flex-1 overflow-auto p-4">
+          <div className="flex-1 overflow-y-auto">
             <Transcript
               items={run.state.items}
+              isRunning={run.isRunning}
               onApprove={(id, approved) => void run.approve(id, approved)}
+              onSuggest={(text) => void run.submit(text)}
             />
           </div>
           <Composer
@@ -115,18 +130,11 @@ export const App = (): JSX.Element => {
           />
         </main>
 
-        <div
-          role="separator"
-          aria-orientation="vertical"
-          onMouseDown={() => {
-            draggingRef.current = true;
-          }}
-          className="w-1 cursor-col-resize bg-border hover:bg-accent"
-        />
-
-        <aside style={{ width: sidebarWidth }} className="shrink-0 border-l border-border bg-panel">
-          <MemoryPanel key={memoryVersion} client={client} />
-        </aside>
+        {showMemory ? (
+          <aside className="hidden w-80 shrink-0 border-l border-border bg-panel/40 lg:block">
+            <MemoryPanel key={memoryVersion} client={client} />
+          </aside>
+        ) : null}
       </div>
     </div>
   );
