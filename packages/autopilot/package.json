@@ -22,11 +22,11 @@
     "clean": "rimraf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@forgewright/planner": "workspace:*",
-    "@forgewright/shared": "workspace:*",
-    "@forgewright/types": "workspace:*"
+    "@forgewright/planner": "*",
+    "@forgewright/shared": "*",
+    "@forgewright/types": "*"
   },
   "devDependencies": {
-    "@forgewright/git": "workspace:*"
+    "@forgewright/git": "*"
   }
 }

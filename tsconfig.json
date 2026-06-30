@@ -70,6 +70,7 @@
     { "path": "./packages/accounts" },
     { "path": "./packages/oauth" },
     { "path": "./packages/agent" },
-    { "path": "./apps/server" }
+    { "path": "./apps/server" },
+    { "path": "./apps/cli" }
   ]
 }

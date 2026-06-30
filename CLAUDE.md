@@ -14,6 +14,7 @@ Guidance for AI assistants (and humans) working in this repository.
 apps/
   server/         Fastify API (DI-wired): /health, /agent/runs (SSE) + approval, /memory CRUD+search
   web/            React + Vite + Tailwind chat UI: streaming, tool cards, approvals, memory panel
+  cli/            `forge` terminal agent (Claude Code-style): in-process agent loop, REPL + one-shot, slash commands, inline approvals
 packages/
   types/          Shared contracts — the dependency root. Interfaces only, no logic.
   shared/         DI container, structured logger, config loader, errors, clock, tokens.

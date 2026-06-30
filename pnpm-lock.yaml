@@ -54,61 +54,88 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.20.0)(jsdom@25.0.1)
 
+  apps/cli:
+    dependencies:
+      '@forgewright/agent':
+        specifier: '*'
+        version: link:../../packages/agent
+      '@forgewright/context':
+        specifier: '*'
+        version: link:../../packages/context
+      '@forgewright/git':
+        specifier: '*'
+        version: link:../../packages/git
+      '@forgewright/llm':
+        specifier: '*'
+        version: link:../../packages/llm
+      '@forgewright/memory':
+        specifier: '*'
+        version: link:../../packages/memory
+      '@forgewright/shared':
+        specifier: '*'
+        version: link:../../packages/shared
+      '@forgewright/tools':
+        specifier: '*'
+        version: link:../../packages/tools
+      '@forgewright/types':
+        specifier: '*'
+        version: link:../../packages/types
+
   apps/server:
     dependencies:
       '@forgewright/accounts':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/accounts
       '@forgewright/agent':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/agent
       '@forgewright/autopilot':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/autopilot
       '@forgewright/context':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/context
       '@forgewright/documents':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/documents
       '@forgewright/git':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/git
       '@forgewright/google':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/google
       '@forgewright/integrations':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/integrations
       '@forgewright/jobs':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/jobs
       '@forgewright/llm':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/llm
       '@forgewright/mcp':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/mcp
       '@forgewright/memory':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/memory
       '@forgewright/oauth':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/oauth
       '@forgewright/orchestrator':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/orchestrator
       '@forgewright/planner':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/planner
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/shared
       '@forgewright/tools':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/tools
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/types
       fastify:
         specifier: ^5.2.0
@@ -117,7 +144,7 @@ importers:
   apps/web:
     dependencies:
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../../packages/types
       react:
         specifier: ^18.3.1
@@ -175,62 +202,62 @@ importers:
   packages/accounts:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/agent:
     dependencies:
       '@forgewright/llm':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../llm
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/tools':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../tools
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/autopilot:
     dependencies:
       '@forgewright/planner':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../planner
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
     devDependencies:
       '@forgewright/git':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../git
 
   packages/context:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/tools':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../tools
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/documents:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
       adm-zip:
         specifier: ^0.5.16
@@ -243,7 +270,7 @@ importers:
         version: 0.18.5
     devDependencies:
       '@forgewright/llm':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../llm
       '@types/adm-zip':
         specifier: ^0.5.7
@@ -252,161 +279,161 @@ importers:
   packages/embeddings:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/git:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/google:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/integrations:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/jobs:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
     devDependencies:
       '@forgewright/embeddings':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../embeddings
       '@forgewright/memory':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../memory
 
   packages/llm:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/mcp:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/memory:
     dependencies:
       '@forgewright/embeddings':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../embeddings
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/oauth:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/orchestrator:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
     devDependencies:
       '@forgewright/llm':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../llm
 
   packages/planner:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
       zod:
         specifier: ^3.24.1
         version: 3.25.76
     devDependencies:
       '@forgewright/llm':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../llm
 
   packages/research:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
     devDependencies:
       '@forgewright/llm':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../llm
 
   packages/shared:
     dependencies:
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/terminal:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/tools':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../tools
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
 
   packages/tools:
     dependencies:
       '@forgewright/shared':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../shared
       '@forgewright/types':
-        specifier: workspace:*
+        specifier: '*'
         version: link:../types
       zod:
         specifier: ^3.24.1

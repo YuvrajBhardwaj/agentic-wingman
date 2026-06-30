@@ -10,21 +10,30 @@
     "pnpm": ">=9.0.0"
   },
   "packageManager": "pnpm@9.15.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "build": "turbo run build",
-    "dev": "turbo run dev",
-    "lint": "turbo run lint",
-    "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "build": "tsc -b",
+    "dev": "tsx watch apps/server/src/index.ts",
+    "lint": "eslint apps packages",
+    "typecheck": "tsc -b",
+    "test": "vitest run",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,json,md}\"",
-    "clean": "turbo run clean && rimraf node_modules"
+    "clean": "rimraf \"{apps,packages}/*/dist\" \"{apps,packages}/*/*.tsbuildinfo\" node_modules",
+    "turbo:build": "turbo run build",
+    "turbo:test": "turbo run test",
+    "turbo:lint": "turbo run lint",
+    "turbo:typecheck": "turbo run typecheck"
   },
   "devDependencies": {
     "@eslint/js": "^9.17.0",
     "@types/node": "^22.10.5",
     "@typescript-eslint/eslint-plugin": "^8.19.1",
     "@typescript-eslint/parser": "^8.19.1",
+    "@vitest/coverage-v8": "^2.1.8",
     "eslint": "^9.17.0",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-import": "^2.31.0",
@@ -34,7 +43,6 @@
     "turbo": "^2.3.3",
     "typescript": "^5.7.3",
     "vite-tsconfig-paths": "^5.1.4",
-    "vitest": "^2.1.8",
-    "@vitest/coverage-v8": "^2.1.8"
+    "vitest": "^2.1.8"
   }
 }

@@ -22,6 +22,6 @@
     "clean": "rimraf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@forgewright/types": "workspace:*"
+    "@forgewright/types": "*"
   }
 }

@@ -22,14 +22,14 @@
     "clean": "rimraf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@forgewright/shared": "workspace:*",
-    "@forgewright/types": "workspace:*",
+    "@forgewright/shared": "*",
+    "@forgewright/types": "*",
     "adm-zip": "^0.5.16",
     "image-size": "^1.2.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
-    "@forgewright/llm": "workspace:*",
+    "@forgewright/llm": "*",
     "@types/adm-zip": "^0.5.7"
   }
 }

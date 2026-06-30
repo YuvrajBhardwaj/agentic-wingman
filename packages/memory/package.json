@@ -22,8 +22,8 @@
     "clean": "rimraf dist *.tsbuildinfo"
   },
   "dependencies": {
-    "@forgewright/embeddings": "workspace:*",
-    "@forgewright/shared": "workspace:*",
-    "@forgewright/types": "workspace:*"
+    "@forgewright/embeddings": "*",
+    "@forgewright/shared": "*",
+    "@forgewright/types": "*"
   }
 }

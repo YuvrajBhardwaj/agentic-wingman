@@ -13,7 +13,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@forgewright/types": "workspace:*",
+    "@forgewright/types": "*",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-markdown": "^9.0.1",
