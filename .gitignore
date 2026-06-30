@@ -1,6 +1,9 @@
 # Dependencies
 node_modules/
 .pnpm-store/
+# pnpm-lock.yaml is the canonical lockfile; npm works too but its lockfile is
+# generated locally and not committed (avoids two drifting lockfiles).
+package-lock.json
 
 # Build output
 dist/

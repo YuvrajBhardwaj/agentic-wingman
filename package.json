@@ -17,7 +17,7 @@
   "scripts": {
     "build": "tsc -b",
     "dev": "tsx watch apps/server/src/index.ts",
-    "lint": "eslint apps packages",
+    "lint": "eslint \"apps/*/src/**/*.{ts,tsx}\" \"packages/*/src/**/*.{ts,tsx}\"",
     "typecheck": "tsc -b",
     "test": "vitest run",
     "format": "prettier --write \"**/*.{ts,tsx,js,json,md}\"",

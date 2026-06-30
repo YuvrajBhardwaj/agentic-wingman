@@ -2,19 +2,19 @@
 
 How to run Forgewright locally — the API server, the web UI, and the model behind it.
 
-> TL;DR: `corepack enable pnpm && pnpm install && pnpm build && pnpm dev`, then open <http://localhost:5273>. Point it at a local model (Ollama) or a cloud key (Groq/NVIDIA).
+> TL;DR: `pnpm install && pnpm build && pnpm dev` (or `npm install && npm run build && npm run dev`), then open <http://localhost:5273>. Point it at a local model (Ollama) or a cloud key (Groq/NVIDIA).
 
 ---
 
 ## 1. Prerequisites
 
-| Tool    | Version | Notes                                                                 |
-| ------- | ------- | --------------------------------------------------------------------- |
-| Node.js | ≥ 20.12 | `process.loadEnvFile` (auto `.env`) needs 20.12+. Node 22/24 fine.    |
-| pnpm    | ≥ 9     | `corepack enable pnpm` (ships with Node), or `npm i -g pnpm`.         |
-| git     | any     | Used by the git tools, autopilot snapshots, and the agent.            |
-| bash    | any     | Used by the persistent terminal and shell tool (Git Bash on Windows). |
-| A model | —       | Local (Ollama / LM Studio) **or** a cloud key (Groq / NVIDIA / etc.). |
+| Tool    | Version | Notes                                                                                          |
+| ------- | ------- | ---------------------------------------------------------------------------------------------- |
+| Node.js | ≥ 20.12 | `process.loadEnvFile` (auto `.env`) needs 20.12+. Node 22/24 fine.                             |
+| pnpm    | ≥ 9     | Recommended. `corepack enable pnpm`, or `npm i -g pnpm`. **npm 7+ also works** — same scripts. |
+| git     | any     | Used by the git tools, autopilot snapshots, and the agent.                                     |
+| bash    | any     | Used by the persistent terminal and shell tool (Git Bash on Windows).                          |
+| A model | —       | Local (Ollama / LM Studio) **or** a cloud key (Groq / NVIDIA / etc.).                          |
 
 > **Windows note:** if `corepack enable pnpm` fails with EPERM (Node in `Program Files`), use `npm i -g pnpm` instead, or run commands via `corepack pnpm@9 …`.
 
@@ -25,42 +25,61 @@ How to run Forgewright locally — the API server, the web UI, and the model beh
 ```bash
 corepack enable pnpm      # or: npm i -g pnpm
 pnpm install
-pnpm build                # tsc -b across all packages (Turborepo)
-pnpm test                 # ~228 tests, fully offline (no model needed)
+pnpm build                # tsc -b across all packages
+pnpm test                 # full suite, fully offline (no model needed)
 ```
 
-Other workspace scripts: `pnpm lint`, `pnpm typecheck`, `pnpm format`, `pnpm clean`.
+**Or with npm (npm 7+ — same scripts, no pnpm needed):**
+
+```bash
+npm install
+npm run build
+npm test
+```
+
+Other workspace scripts (identical under both): `lint`, `typecheck`, `format`, `clean`.
+
+> **Don't mix pnpm and npm in one checkout** — they use different `node_modules`
+> layouts and trip over each other. To switch, wipe first:
+> `rm -rf node_modules apps/*/node_modules packages/*/node_modules`, then install
+> with the one you want. `pnpm-lock.yaml` is the committed lockfile; npm's
+> `package-lock.json` is generated locally and git-ignored.
+>
+> **Turborepo** remains available as an optional caching accelerator:
+> `pnpm turbo:build` / `pnpm turbo:test`. (On some Windows + npm setups turbo's
+> native binary won't launch; the default `tsc -b`/`vitest` scripts avoid it.)
 
 ---
 
 ## 3. Run it
 
-### Everything at once
+Run the API and the UI in two terminals:
 
 ```bash
-pnpm dev
+# terminal 1 — API server on :4317
+pnpm dev                              # or: npm run dev          (tsx watch)
+
+# terminal 2 — Web UI on :5273 (proxies API calls to :4317)
+pnpm --filter @forgewright/web dev    # or: npm run dev -w @forgewright/web
 ```
-
-This starts **both** apps via Turborepo:
-
-- **API server** on <http://localhost:4317> (`@forgewright/server`, `tsx watch`)
-- **Web UI** on <http://localhost:5273> (`@forgewright/web`, Vite — proxies API calls to the server)
 
 Open <http://localhost:5273>.
 
-### Or run them separately
+### Production-style (built, not watched) — most reliable on Windows
+
+`tsx watch` can be flaky on some Windows setups; the built server is rock-solid:
 
 ```bash
-pnpm --filter @forgewright/server dev   # API only, :4317
-pnpm --filter @forgewright/web dev      # UI only,  :5273
+pnpm build                               # or: npm run build
+node apps/server/dist/index.js           # serves the API on :4317
+pnpm --filter @forgewright/web preview   # or: npm run preview -w @forgewright/web
 ```
 
-### Production-style (built, not watched)
+### Terminal agent (no server needed)
 
 ```bash
-pnpm build
-node apps/server/dist/index.js          # serves the API
-pnpm --filter @forgewright/web preview   # serves the built UI
+node apps/cli/dist/index.js              # interactive REPL
+node apps/cli/dist/index.js "fix the failing test"   # one-shot
 ```
 
 ---
